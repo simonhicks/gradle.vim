@@ -5,7 +5,7 @@ let g:has_loaded_gradle_vim = 1
 
 function! s:gradlew(cmd)
   let l:oldmakeprg = &makeprg
-  setlocal makeprg="((./gradlew " . a:cmd . " 3>&2 2>&1 1>&3-) 2>/dev/tty)" 
+  let &makeprg="((./gradlew " . a:cmd . " 3>&2 2>&1 1>&3-) 2>/dev/tty)" 
   make
   let &makeprg = l:oldmakeprg
 endfunction
