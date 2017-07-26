@@ -7,9 +7,14 @@ the makeprg to whatever it was before.
 
 ## Usage
 
-Assuming you have a `./gradlew` script in your current directory, you can run `:Gradle <taskName>`
-to run that task and load the errors into the quickfix list. So, `:Gradle build` will run `./gradlew
-build`.
+Assuming you're editing a buffer that's in a gradlew managed project, you can run `:Gradle <taskName>`
+to run that task and load the errors into the quickfix list.
+
+So, `:Gradle build` does the following:
+
+1. find the first parent directory with a `gradlew` file
+2. run `./gradlew build` in that directory
+3. load any errors into the quickfix list
 
 That's it.
 
