@@ -29,7 +29,7 @@ function! s:get_cmd(cmd, dir)
     let g:gradle_vim_task_defaults[a:dir] = a:cmd
     return a:cmd
   elseif has_key(g:gradle_vim_task_defaults, a:dir)
-    return g:gradle_vim_task_defaults(a:dir)
+    return g:gradle_vim_task_defaults[a:dir]
   else
     return g:gradle_vim_initial_default_task
   endif
