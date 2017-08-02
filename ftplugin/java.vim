@@ -3,4 +3,8 @@ if exists("b:hasLoadedGradleVimJava")
 endif
 let g:hasLoadedGradleVimJava = 1
 
-inoremap <buffer> <C-f> <C-R>=gradle#importCompletion()<CR>
+if !exists("g:gradleVimImportCompleteMapping")
+  let g:gradleVimImportCompleteMapping = "<C-f>"
+endif
+
+execute "inoremap <buffer> " . g:gradleVimImportCompleteMapping . " <C-R>=gradle#importCompletion()<CR>"

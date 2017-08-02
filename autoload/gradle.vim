@@ -64,7 +64,7 @@ function! s:unpackJdkDocs()
   echom "Unpacking javadocs"
   call system("unzip -d " . s:gradleRoot() . "/.vimproject/tmp " . g:gradleVimResources . "/jdk-8u144-docs-all.zip docs/api/*")
   call system("mv " . s:gradleRoot() . "/.vimproject/tmp/docs/api/* " . s:gradleRoot() . "/.vimproject/javadocs/")
-  call system("rmdir -r " . s:gradleRoot() . "/.vimproject/tmp")
+  call system("rm -r " . s:gradleRoot() . "/.vimproject/tmp")
 endfunction
 
 function! s:downloadSourcesAndJavadoc()
@@ -115,7 +115,8 @@ endfunction
 
 function gradle#importCompletion()
   let l:options = []
-  for l:class in s:classesMatching(getline('.'))
+  let l:line = substitute(getline('.'), '\(^\s*\|\s*$\)', '', 'g') 
+  for l:class in s:classesMatching(l:line)
     call add(l:options, "import " . l:class . ";")
   endfor
   call complete(1, l:options)
