@@ -1,0 +1,98 @@
+#!/bin/bash
+
+GRADLE_PROJECT_DIR=`pwd`
+while [ ! -f $GRADLE_PROJECT_DIR/gradlew ]
+do
+  GRADLE_PROJECT_DIR=`dirname $GRADLE_PROJECT_DIR`
+  if [ "$GRADLE_PROJECT_DIR" == "/" ]
+  then
+    echo "ERROR: Couldn't find gradle project!"
+    exit 1
+  fi
+done
+
+cd $GRADLE_PROJECT_DIR
+
+TEMP_GRADLE_BUILD_FILE=`mktemp -p $GRADLE_PROJECT_DIR --suffix .gradle`
+TEMP_GRADLE_SETTINGS_FILE=`mktemp -p $GRADLE_PROJECT_DIR --suffix .gradle`
+
+deleteTempFiles() {
+  rm $TEMP_GRADLE_BUILD_FILE
+  rm $TEMP_GRADLE_SETTINGS_FILE
+}
+
+trap deleteTempFiles EXIT
+
+cat > $TEMP_GRADLE_BUILD_FILE <<-EOF
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.io.FileInputStream;
+
+$([ -f $GRADLE_PROJECT_DIR/build.gradle ] && cat $GRADLE_PROJECT_DIR/build.gradle)
+
+task vim {
+  def vimprojectDir = "\${projectDir}/.vimproject"
+  def sourceArtifacts = []
+  def javadocArtifacts = []
+  def classNamesFile = new File("\${vimprojectDir}/classes.txt")
+  classNamesFile.parentFile.mkdirs()
+  [configurations, buildscript.configurations].flatten().each { conf ->
+    try {
+      if (conf.canBeResolved) {
+        inputs.files conf
+        doLast {
+          conf.files.each { file ->
+            def zip = new ZipInputStream(new FileInputStream(file.absolutePath))
+            for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+              if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                String className = entry.getName().replace('/', '.')
+                classNamesFile << (className.substring(0, className.length() - ".class".length())) + "\\n"
+              }
+            }
+          }
+          def componentIds = conf.incoming.resolutionResult.allDependencies.collect { it.selected.id }
+          ArtifactResolutionResult result = dependencies.createArtifactResolutionQuery()
+              .forComponents(componentIds)
+              .withArtifacts(JvmLibrary, SourcesArtifact, JavadocArtifact)
+              .execute()
+          result.resolvedComponents.each { ComponentArtifactsResult component ->
+            Set<ArtifactResult> sources = component.getArtifacts(SourcesArtifact)
+            sources.each { ArtifactResult ar ->
+              if (ar instanceof ResolvedArtifactResult) {
+                sourceArtifacts << ar.file
+              }
+            }
+            Set<ArtifactResult> javadocs = component.getArtifacts(JavadocArtifact)
+            javadocs.each { ArtifactResult ar ->
+              if (ar instanceof ResolvedArtifactResult) {
+                javadocArtifacts << ar.file
+              }
+            }
+          }
+        }
+      }
+    } catch (Exception e) {
+      println "Unable to resolve configuration: \$conf";
+      e.printStackTrace();
+    }
+  }
+  doLast {
+    copy {
+      from sourceArtifacts.collect { zipTree(it) }
+      into "\${vimprojectDir}/sources"
+    }
+    copy {
+      from javadocArtifacts.collect { zipTree(it) }
+      into "\${vimprojectDir}/javadocs"
+    }
+  }
+}
+EOF
+
+cat > $TEMP_GRADLE_SETTINGS_FILE <<-EOF
+$([ -f $GRADLE_PROJECT_DIR/settings.gradle ] && cat $GRADLE_PROJECT_DIR/settings.gradle)
+
+rootProject.buildFileName = "$(basename $TEMP_GRADLE_BUILD_FILE)"
+EOF
+
+$GRADLE_PROJECT_DIR/gradlew --settings-file $TEMP_GRADLE_SETTINGS_FILE $@
