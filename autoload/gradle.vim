@@ -86,7 +86,7 @@ function! gradle#generateTags(bang)
     call s:downloadSourcesAndJavadoc()
   endif
   echom "Generating tag file"
-  call system("ctags --language-force=java -f " . s:gradleRoot() . "/.tags -R " . s:gradleRoot())
+  call system("ctags --exclude='*.class' --exclude='*.html' -f " . s:gradleRoot() . "/.tags -R " . s:gradleRoot())
 endfunction
 
 function! gradle#showJavadoc(qualifiedClassName)
