@@ -30,7 +30,7 @@ function! s:getCmd(cmd, dir)
   if a:cmd != ''
     let g:gradleVimTaskDefaults[a:dir] = a:cmd
     return a:cmd
-  elseif hasKey(g:gradleVimTaskDefaults, a:dir)
+  elseif has_key(g:gradleVimTaskDefaults, a:dir)
     return g:gradleVimTaskDefaults[a:dir]
   else
     return g:gradleVimInitialDefaultTask
