@@ -20,5 +20,7 @@ command! -nargs=* Gradle call gradle#gradlew("<args>")
 command! -nargs=0 -bang GenerateTags call gradle#generateTags(<q-bang>)
 command! -nargs=1 -complete=customlist,gradle#classComplete Javadoc call gradle#showJavadoc("<args>")
 
+au BufRead */.vimproject/* setlocal readonly
+
 " TODO catch file not found error on .vimproject/ and report something helpful
 " about :GenerateTags

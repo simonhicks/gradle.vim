@@ -14,7 +14,7 @@ function! s:findRoot()
       return l:path
     else
       let l:path = fnamemodify(l:path, ":h")
-    end
+    endif
   endwhile
   throw "Couldn't find Gradle project root!"
 endfunction
@@ -74,7 +74,10 @@ function! s:downloadSourcesAndJavadoc()
     echom "Fetching sources and javadocs"
     call system("gradleww --rerun-tasks vim")
     call s:unpackJdkDocs()
-    call writefile(readfile(g:gradleVimResources . "/java8_classes.txt"), s:gradleRoot() . "/.vimproject/classes.txt", "a")
+    let l:classFile = s:gradleRoot() . "/.vimproject/classes.txt"
+    call system("touch " . l:classFile)
+    let it = readfile(g:gradleVimResources . "/java8_classes.txt")
+    call writefile(it, l:classFile, "a")
   finally
     call s:cleanupTempState(l:oldState)
   endtry
