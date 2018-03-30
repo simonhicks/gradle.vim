@@ -120,7 +120,9 @@ function gradle#importCompletion()
   let l:options = []
   let l:line = substitute(getline('.'), '\(^\s*\|\s*$\)', '', 'g') 
   for l:class in s:classesMatching(l:line)
-    call add(l:options, "import " . l:class . ";")
+    if match(l:class, '\$\d\d*$') == -1
+      call add(l:options, "import " . substitute(l:class, '\$', '.', 'g') . ";")
+    endif
   endfor
   call complete(1, l:options)
   return ''
