@@ -26,6 +26,10 @@ function! s:gradleRoot()
   return b:gradleRoot
 endfunction
 
+function! s:ensureVimprojectDirExists()
+  call system("mkdir -p " . s:gradleRoot() . "/.vimproject")
+endfunction
+
 function! s:getCmd(cmd, dir)
   if a:cmd != ''
     let g:gradleVimTaskDefaults[a:dir] = a:cmd
@@ -77,7 +81,7 @@ function! s:downloadSourcesAndJavadoc()
     let l:classFile = s:gradleRoot() . "/.vimproject/classes.txt"
     call system("touch " . l:classFile)
     let it = readfile(g:gradleVimResources . "/java8_classes.txt")
-    call writefile(it, l:classFile, "a")
+    call writefile(it, l:classFile)
   finally
     call s:cleanupTempState(l:oldState)
   endtry
@@ -86,6 +90,7 @@ endfunction
 function! gradle#generateTags(bang)
   if (a:bang != '!')
     call system("rm -rf " . s:gradleRoot() . "/.vimproject")
+    call s:ensureVimprojectDirExists()
     call s:downloadSourcesAndJavadoc()
   endif
   echom "Generating tag file"
